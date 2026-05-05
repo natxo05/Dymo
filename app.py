@@ -261,15 +261,10 @@ class DymoApp:
         self.logo_label.pack(side="left", padx=(20, 10), pady=8)
         self._carrega_logo()
 
-        titol_frame = ctk.CTkFrame(header, fg_color="transparent")
-        titol_frame.pack(side="left", pady=12)
-
-        ctk.CTkLabel(titol_frame, text="🏷️  DYMO LetraTag",
-                     font=ctk.CTkFont(size=22, weight="bold"),
-                     text_color="white").pack(anchor="w")
-        ctk.CTkLabel(titol_frame, text="Editor d'etiquetes · LT-200B",
-                     font=ctk.CTkFont(size=11),
-                     text_color="#94a3b8").pack(anchor="w")
+        # Imatge "Dymo Label Maker" (canvia segons el tema)
+        self.titol_label = ctk.CTkLabel(header, text="")
+        self.titol_label.pack(side="left", pady=8)
+        self._carrega_titol()
 
         dreta_header = ctk.CTkFrame(header, fg_color="transparent")
         dreta_header.pack(side="right", padx=20, pady=18)
@@ -452,6 +447,7 @@ class DymoApp:
         mode = "dark" if self.tema_switch.get() else "light"
         ctk.set_appearance_mode(mode)
         self._carrega_logo()
+        self._carrega_titol()
 
     def _carrega_logo(self):
         """Carrega el logo IPC adequat segons el tema actiu."""
@@ -477,6 +473,35 @@ class DymoApp:
             self.logo_label.configure(image=self.logo_img)
         except Exception as e:
             # Si no es pot carregar el logo, no passa res, continuem
+            pass
+
+    def _carrega_titol(self):
+        """Carrega la imatge 'Dymo Label Maker' adequada segons el tema."""
+        try:
+            mode_actual = ctk.get_appearance_mode()
+            # En tema fosc fem servir la imatge clara (blanca), i al revés
+            if mode_actual.lower() == "dark":
+                ruta = CARPETA_ASSETS / "dymo_label_clar.png"
+            else:
+                ruta = CARPETA_ASSETS / "dymo_label_fosc.png"
+
+            if not ruta.exists():
+                return
+
+            img = Image.open(ruta).convert("RGBA")
+            # Retallem el cantó transparent per ajustar millor
+            bbox = img.getbbox()
+            if bbox:
+                img = img.crop(bbox)
+            # Escalem mantenint proporció, alçada ~50 px
+            ratio = 50 / img.height
+            nou_w = int(img.width * ratio)
+            img = img.resize((nou_w, 50), Image.LANCZOS)
+
+            self.titol_img = ctk.CTkImage(light_image=img, dark_image=img,
+                                            size=(nou_w, 50))
+            self.titol_label.configure(image=self.titol_img)
+        except Exception:
             pass
 
     def _on_mida_canvia(self, valor):
